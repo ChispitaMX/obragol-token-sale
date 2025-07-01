@@ -1,10 +1,6 @@
-<script src=" https://unpkg.com/@solana/web3.js@latest/bundle.js "></script>
-<script src=" https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/dist/index.iife.js "></script>
-Reemplace su script.js con:
-``javascript
-constante DEST_WALLET = "8W2ogqdvFSvDfQitX2JyyiCX6hqehZWvrpWTkkYCHGPm";
-const USDT_MINT = "Es9vMFrzaCERCFGK2F4zn6Lz3bZQkQqUGe9nU2hteY4"; // token USDT SPL
-deje que el proveedor = null;
+const DEST_WALLET = "8W2ogqdvFSvDFQitX2JyyiCX6hqeRZWrpWTkKYCHGPm";
+const USDT_MINT = "Es9vMFrzaCERCFGK2F4zn6Lz3bZQkQqUGe9nU2hteY4"; // USDT SPL
+let provider = null;
 
 // Detectar billetera (Phantom o Solflare)
 función getProvider() {
