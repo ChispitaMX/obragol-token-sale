@@ -30,15 +30,50 @@ document.getElementById("obracolAmount").textContent = obracol;
 });
 
 // Enviar transacción USDT
-función asíncrona buyTokens() {
-proveedor = obtenerProveedor();
-si (!proveedor) retorna;
-constante conn = nueva solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"));
-const pagador = proveedor.publicKey;
-const usdtAmount = parseFloat(document.getElementById("usdtInput").value);
-si (isNaN(cantidadUsdt) || cantidadUsdt <= 0) {
-alert("Ingresa una cantidad válida de USDT.");
-devolver;
+async function buyTokens() {
+  const provider = getProvider();
+  if (!provider) return;
+
+  const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"));
+
+  const usdtMint = new solanaWeb3.PublicKey(USDT_MINT);
+  const destWallet = new solanaWeb3.PublicKey(DEST_WALLET);
+
+  const wallet = provider.publicKey;
+  const usdtAmount = parseFloat(document.getElementById("usdtAmount").value);
+  if (isNaN(usdtAmount) || usdtAmount <= 0) {
+    alert("Ingresa una cantidad válida de USDT.");
+    return;
+  }
+
+  const usdtAmountInSmallestUnit = usdtAmount * 1e6;
+
+  const fromTokenAccount = await splToken.getAssociatedTokenAddress(usdtMint, wallet);
+  const toTokenAccount = await splToken.getAssociatedTokenAddress(usdtMint, destWallet);
+
+  const transaction = new solanaWeb3.Transaction().add(
+    splToken.createTransferInstruction(
+      fromTokenAccount,
+      toTokenAccount,
+      wallet,
+      usdtAmountInSmallestUnit,
+      [],
+      splToken.TOKEN_PROGRAM_ID
+    )
+  );
+
+  try {
+    const { blockhash } = await connection.getRecentBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = wallet;
+
+    const signed = await provider.signTransaction(transaction);
+    const signature = await connection.sendRawTransaction(signed.serialize());
+    alert("Compra exitosa. ID de transacción: " + signature);
+  } catch (e) {
+    console.error(e);
+    alert("Error al enviar la transacción.");
+  }
 }
 // Decimales del token USDT SPL = 6
 cantidad constante = Math.floor(usdtAmount * 1e6);
