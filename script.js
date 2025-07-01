@@ -1,99 +1,77 @@
+<script src=" https://unpkg.com/@solana/web3.js@latest/bundle.js "></script>
+<script src=" https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/dist/index.iife.js "></script>
+Reemplace su script.js con:
+``javascript
+constante DEST_WALLET = "8W2ogqdvFSvDfQitX2JyyiCX6hqehZWvrpWTkkYCHGPm";
+const USDT_MINT = "Es9vMFrzaCERCFGK2F4zn6Lz3bZQkQqUGe9nU2hteY4"; // token USDT SPL
+deje que el proveedor = null;
 
-const DESTINATION_WALLET = "8W2ogqdvFSvDfQitX2JyyiCX6hqehZWvrpWTkkYCHGPm";
-const USDT_MINT = "Es9vMFrzaCERCFGK2F4zn6Lz3bZQkQqUGe9nU2hteY4"; // SPL USDT en mainnet
-
-// Conexión a Phantom
-async function connectPhantom() {
-  const provider = window.solana;
-  if (!provider || !provider.isPhantom) {
-    alert("Instala la Phantom Wallet");
-    return null;
-  }
-  try {
-    const resp = await provider.connect();
-    return resp.publicKey.toString();
-  } catch (e) {
-    alert("No se pudo conectar con la wallet: " + e.message);
-    return null;
-  }
+// Detectar billetera (Phantom o Solflare)
+función getProvider() {
+si (ventana.solana && ventana.solana.isPhantom) devuelve ventana.solana;
+si (ventana.solflare) devuelve ventana.solflare;
+alert("Instala Phantom o Solflare Wallet.");
+devuelve nulo;
 }
 
-// Transferencia real de USDT SPL
-async function sendUSDT(amount) {
-  const provider = window.solana;
-  const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"), "confirmed");
-  const fromWallet = provider.publicKey;
-  const toWallet = new solanaWeb3.PublicKey(DESTINATION_WALLET);
-
-  const fromTokenAccount = await splToken.getAssociatedTokenAddress(
-    new solanaWeb3.PublicKey(USDT_MINT), fromWallet
-  );
-  const toTokenAccount = await splToken.getAssociatedTokenAddress(
-    new solanaWeb3.PublicKey(USDT_MINT), toWallet
-  );
-
-  const transaction = new solanaWeb3.Transaction().add(
-    splToken.createTransferInstruction(
-      fromTokenAccount,
-      toTokenAccount,
-      fromWallet,
-      Number(amount) * 1e6 // USDT tiene 6 decimales
-    )
-  );
-  transaction.feePayer = fromWallet;
-  let blockhashObj = await connection.getRecentBlockhash();
-  transaction.recentBlockhash = blockhashObj.blockhash;
-
-  const signed = await provider.signTransaction(transaction);
-  const txId = await connection.sendRawTransaction(signed.serialize());
-  alert("Transferencia enviada! TxID: " + txId);
+// Conectar billetera
+función asíncrona connectWallet() {
+proveedor = obtenerProveedor();
+si (!proveedor) retorna;
+intentar {
+esperar proveedor.connect();
+alert("Wallet conectada: " + provider.publicKey.toString());
+} captura (e) {
+alert("No se pudo conectar la billetera.");
+}
 }
 
-// Eventos de botones
-document.getElementById("connectWallet").onclick = async function () {
-  const address = await connectPhantom();
-  if(address){
-    alert("Wallet conectada: " + address);
-  }
-};
-
-document.getElementById("buyBtn").onclick = async function () {
-  const usdtAmount = document.getElementById("usdtInput").value;
-  await sendUSDT(usdtAmount);
-};
-
-// Contador y cálculo de tokens
-const usdtInput = document.getElementById("usdtInput");
-const obracolAmount = document.getElementById("obracolAmount");
-const TOKEN_PRICE = 0.002;
-usdtInput.addEventListener("input", () => {
-  const usdt = parseFloat(usdtInput.value);
-  if (!isNaN(usdt)) {
-    const tokens = usdt / TOKEN_PRICE;
-    obracolAmount.innerText = tokens.toFixed(0);
-  } else {
-    obracolAmount.innerText = "0";
-  }
+// Calcula los tokens OBRAGOL a recibir
+documento.getElementById("usdtInput").addEventListener("entrada", función () {
+const usdt = parseFloat(este.valor);
+const obracol = isNaN(usdt)? 0 : usdt * 500;
+document.getElementById("obracolAmount").textContent = obracol;
 });
 
-// Temporizador
-function startCountdown() {
-  const countdown = document.getElementById("countdown");
-  const endDate = new Date();
-  endDate.setDate(endDate.getDate() + 60);
-  function updateCountdown() {
-    const now = new Date().getTime();
-    const distance = endDate.getTime() - now;
-    if (distance <= 0) {
-      countdown.innerText = "Preventa finalizada";
-      return;
-    }
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    countdown.innerText = `Tiempo restante: ${days}d ${hours}h ${minutes}m ${seconds}s`;
-  }
-  setInterval(updateCountdown, 1000);
+// Enviar transacción USDT
+función asíncrona buyTokens() {
+proveedor = obtenerProveedor();
+si (!proveedor) retorna;
+constante conn = nueva solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"));
+const pagador = proveedor.publicKey;
+const usdtAmount = parseFloat(document.getElementById("usdtInput").value);
+si (isNaN(cantidadUsdt) || cantidadUsdt <= 0) {
+alert("Ingresa una cantidad válida de USDT.");
+devolver;
 }
-startCountdown();
+// Decimales del token USDT SPL = 6
+cantidad constante = Math.floor(usdtAmount * 1e6);
+
+ try { // Get token accounts const fromTokenAcc = await window.splToken.Token.getAssociatedTokenAddress( window.splToken.ASSOCIATED_TOKEN_PROGRAM_ID, window.splToken.TOKEN_PROGRAM_ID, new solanaWeb3.PublicKey(USDT_MINT), payer ); const toTokenAcc = await window.splToken.Token.getAssociatedTokenAddress( window.splToken.ASSOCIATED_TOKEN_PROGRAM_ID, window.splToken.TOKEN_PROGRAM_ID, new solanaWeb3.PublicKey(USDT_MINT), new solanaWeb3.PublicKey(DEST_WALLET) ); // Create transfer instruction const tx = new solanaWeb3.Transaction().add( window.splToken.Token.createTransferInstruction( window.splToken.TOKEN_PROGRAM_ID, fromTokenAcc, toTokenAcc, payer, [], amount ) ); tx.feePayer = payer; let { blockhash } = await conn.getLatestBlockhash(); tx.recentBlockhash = blockhash; // Sign & send let signed = await provider.signTransaction(tx); let txid = await conn.sendRawTransaction(signed.serialize()); alert("Pago enviado. TxID: " + txid + "\nPuedes verlo en Solscan.io"); // (Opcional) Aquí puedes registrar txid/compra en tu backend si necesitas. } catch (e) { alert("Error al enviar USDT: " + e.message); }
+}
+
+// Escuchadores de eventos
+document.getElementById("connectWallet").onclick = connectWallet;
+document.getElementById("buyToken").onclick = comprarTokens;
+
+// Lógica de cuenta regresiva (preventa hasta el 28-agosto-2025)
+función startCountdown() {
+const endDate = nueva fecha("2025-08-28T00:00:00Z").getTime();
+intervalo constante = setInterval(función () {
+const ahora = Fecha.ahora();
+const diff = endDate - ahora;
+si (diff <= 0) {
+clearInterval(intervalo);
+document.getElementById("countdown").textContent = "Preventa finalizada";
+} demás {
+const días = Math.floor(diff / (1000 * 60 * 60 * 24));
+const horas = Math.floor((diff / (1000 * 60 * 60)) % 24);
+const minutos = Math.floor((diff / (1000 * 60)) % 60);
+const segundos = Math.floor((diff / 1000) % 60);
+document.getElementById("cuenta regresiva").textContent =
+días + "d " + horas + "h " + minutos + "m " + segundos + "s";
+}
+}, 1000);
+}
+iniciarCuentaRegresiva();
+```
